@@ -93,7 +93,7 @@ class _RecognitionScreenState extends State<RecognitionScreen> {
 
       //TODO cắt khuôn mặt
       final bytes = _image!.readAsBytesSync();
-      img.Image? faceImg = img.decodeImage(bytes);
+      img.Image? faceImg = img.decodeImage(bytes!);
       img.Image faceImg2 = img.copyCrop(faceImg!,
           x: left.toInt(),
           y: top.toInt(),
@@ -113,7 +113,7 @@ class _RecognitionScreenState extends State<RecognitionScreen> {
   //TODO loại bỏ xoay ảnh từ camera
   removeRotation(File inputImage) async {
     final img.Image? capturedImage =
-        img.decodeImage(await File(inputImage.path).readAsBytes());
+        img.decodeImage(await File(inputImage!.path).readAsBytes());
     final img.Image orientedImage = img.bakeOrientation(capturedImage!);
     return await File(_image!.path).writeAsBytes(img.encodeJpg(orientedImage));
   }

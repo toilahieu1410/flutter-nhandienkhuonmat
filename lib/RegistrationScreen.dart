@@ -9,6 +9,7 @@ import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
 
+
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({Key? key}) : super(key: key);
 
@@ -28,11 +29,13 @@ class _HomePageState extends State<RegistrationScreen> {
   late Recognizer recognizer;
   @override
   void initState() {
+
     super.initState();
     imagePicker = ImagePicker();
 
     final options = FaceDetectorOptions();
     faceDetector = FaceDetector(options: options);
+
 
     recognizer = Recognizer();
   }
@@ -41,7 +44,7 @@ class _HomePageState extends State<RegistrationScreen> {
   _imgFromCamera() async {
     XFile? pickedFile = await imagePicker.pickImage(source: ImageSource.camera);
     if (pickedFile != null) {
-      setState(() {
+      setState((){
         _image = File(pickedFile.path);
         doFaceDetection();
       });
@@ -53,7 +56,7 @@ class _HomePageState extends State<RegistrationScreen> {
     XFile? pickedFile =
         await imagePicker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-      setState(() {
+      setState((){
         _image = File(pickedFile.path);
         doFaceDetection();
       });
@@ -74,28 +77,20 @@ class _HomePageState extends State<RegistrationScreen> {
     faces = await faceDetector.processImage(inputImage);
     for (Face face in faces) {
       Rect faceRect = face.boundingBox;
-      num left = faceRect.left < 0 ? 0 : faceRect.left;
-      num top = faceRect.top < 0 ? 0 : faceRect.top;
-      num right =
-          faceRect.right > image.width ? image.width - 1 : faceRect.right;
-      num bottom =
-          faceRect.bottom > image.height ? image.height - 1 : faceRect.bottom;
+      num left = faceRect.left<0?0:faceRect.left;
+      num top = faceRect.top<0?0:faceRect.top;
+      num right = faceRect.right>image.width?image.width-1:faceRect.right;
+      num bottom = faceRect.bottom>image.height?image.height-1:faceRect.bottom;
       num width = right - left;
       num height = bottom - top;
 
       //TODO crop face
-      final bytes = _image!
-          .readAsBytesSync(); //await File(cropedFace!.path).readAsBytes();
-      img.Image? faceImg = img.decodeImage(bytes);
-      img.Image faceImg2 = img.copyCrop(faceImg!,
-          x: left.toInt(),
-          y: top.toInt(),
-          width: width.toInt(),
-          height: height.toInt());
+      final bytes = _image!.readAsBytesSync();//await File(cropedFace!.path).readAsBytes();
+      img.Image? faceImg = img.decodeImage(bytes!);
+      img.Image faceImg2 = img.copyCrop(faceImg!,x:left.toInt(),y:top.toInt(),width:width.toInt(),height:height.toInt());
 
       Recognition recognition = recognizer.recognize(faceImg2, faceRect);
-      showFaceRegistrationDialogue(
-          Uint8List.fromList(img.encodeBmp(faceImg2)), recognition);
+      showFaceRegistrationDialogue(Uint8List.fromList(img.encodeBmp(faceImg2)), recognition);
     }
     drawRectangleAroundFaces();
 
@@ -104,8 +99,7 @@ class _HomePageState extends State<RegistrationScreen> {
 
   //TODO remove rotation of camera images
   removeRotation(File inputImage) async {
-    final img.Image? capturedImage =
-        img.decodeImage(await File(inputImage.path).readAsBytes());
+    final img.Image? capturedImage = img.decodeImage(await File(inputImage!.path).readAsBytes());
     final img.Image orientedImage = img.bakeOrientation(capturedImage!);
     return await File(_image!.path).writeAsBytes(img.encodeJpg(orientedImage));
   }
@@ -114,20 +108,17 @@ class _HomePageState extends State<RegistrationScreen> {
 
   //TODO Face Registration Dialogue
   TextEditingController textEditingController = TextEditingController();
-  showFaceRegistrationDialogue(Uint8List cropedFace, Recognition recognition) {
+  showFaceRegistrationDialogue(Uint8List cropedFace, Recognition recognition){
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("Face Registration", textAlign: TextAlign.center),
-        alignment: Alignment.center,
+        title: const Text("Face Registration",textAlign: TextAlign.center),alignment: Alignment.center,
         content: SizedBox(
           height: 340,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(
-                height: 20,
-              ),
+              const SizedBox(height: 20,),
               Image.memory(
                 cropedFace,
                 width: 200,
@@ -136,37 +127,27 @@ class _HomePageState extends State<RegistrationScreen> {
               SizedBox(
                 width: 200,
                 child: TextField(
-                    controller: textEditingController,
-                    decoration: const InputDecoration(
-                        fillColor: Colors.white,
-                        filled: true,
-                        hintText: "Enter Name")),
+                  controller: textEditingController,
+                    decoration: const InputDecoration( fillColor: Colors.white, filled: true,hintText: "Enter Name")
+                ),
               ),
-              const SizedBox(
-                height: 10,
-              ),
+              const SizedBox(height: 10,),
               ElevatedButton(
                   onPressed: () {
-                    recognizer.registerFaceInDB(
-                        textEditingController.text, recognition.embeddings);
+                    recognizer.registerFaceInDB(textEditingController.text, recognition.embeddings );
                     textEditingController.text = "";
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                       content: Text("Face Registered"),
                     ));
-                  },
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      minimumSize: const Size(200, 40)),
+                  },style: ElevatedButton.styleFrom(backgroundColor:Colors.blue,minimumSize: const Size(200,40)),
                   child: const Text("Register"))
             ],
           ),
-        ),
-        contentPadding: EdgeInsets.zero,
+        ),contentPadding: EdgeInsets.zero,
       ),
     );
   }
-
   //TODO draw rectangles
   var image;
   drawRectangleAroundFaces() async {
@@ -190,26 +171,26 @@ class _HomePageState extends State<RegistrationScreen> {
         children: [
           image != null
               ?
-              // Container(
-              //         margin: const EdgeInsets.only(top: 100),
-              //         width: screenWidth - 50,
-              //         height: screenWidth - 50,
-              //         child: Image.file(_image!),
-              //       )
+          // Container(
+          //         margin: const EdgeInsets.only(top: 100),
+          //         width: screenWidth - 50,
+          //         height: screenWidth - 50,
+          //         child: Image.file(_image!),
+          //       )
               Container(
-                  margin: const EdgeInsets.only(
-                      top: 60, left: 30, right: 30, bottom: 0),
-                  child: FittedBox(
-                    child: SizedBox(
-                      width: image.width.toDouble(),
-                      height: image.width.toDouble(),
-                      child: CustomPaint(
-                        painter:
-                            FacePainter(facesList: faces, imageFile: image),
-                      ),
+                margin: const EdgeInsets.only(
+                    top: 60, left: 30, right: 30, bottom: 0),
+                child: FittedBox(
+                  child: SizedBox(
+                    width: image.width.toDouble(),
+                    height: image.width.toDouble(),
+                    child: CustomPaint(
+                      painter: FacePainter(
+                          facesList: faces, imageFile: image),
                     ),
                   ),
-                )
+                ),
+              )
               : Container(
                   margin: const EdgeInsets.only(top: 100),
                   child: Image.asset(

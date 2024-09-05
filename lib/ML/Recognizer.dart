@@ -16,7 +16,7 @@ class Recognizer {
   final dbHelper = DatabaseHelper();
   Map<String, Recognition> registered = Map();
   @override
-  String get modelName => 'assets/mobile_face_net.tflite';
+  String get modelName => 'assets/facenet.tflite';
 
   Recognizer({int? numThreads}) {
     _interpreterOptions = InterpreterOptions();
