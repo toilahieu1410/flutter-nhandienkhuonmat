@@ -83,27 +83,37 @@ class _RecognitionScreenState extends State<RecognitionScreen> {
       Rect faceRect = face.boundingBox;
       num left = faceRect.left < 0 ? 0 : faceRect.left;
       num top = faceRect.top < 0 ? 0 : faceRect.top;
-      num right = faceRect.right > image.width ? image.width - 1: faceRect.right;
-      num bottom = faceRect.bottom > image.height ? image.height - 1: faceRect.bottom;
+      num right =
+          faceRect.right > image.width ? image.width - 1 : faceRect.right;
+      num bottom =
+          faceRect.bottom > image.height ? image.height - 1 : faceRect.bottom;
 
       num width = right - left;
       num height = bottom - top;
 
       //TODO cắt khuôn mặt
       final bytes = _image!.readAsBytesSync();
-      img.Image? faceImg = img.decodeImage(bytes!);
-      img.Image faceImg2 = img.copyCrop(faceImg!,x:left.toInt(),y:top.toInt(),width:width.toInt(),height:height.toInt());
+      img.Image? faceImg = img.decodeImage(bytes);
+      img.Image faceImg2 = img.copyCrop(faceImg!,
+          x: left.toInt(),
+          y: top.toInt(),
+          width: width.toInt(),
+          height: height.toInt());
 
       Recognition recognition = recognizer.recognize(faceImg2, faceRect);
+      if (recognition.distance > 1.25) {
+        recognition.name = 'Unknow';
+      }
       recognitions.add(recognition);
-       //showFaceRegistrationDialogue(Uint8List.fromList(img.encodePng(faceImg2)), recognition);
+      //showFaceRegistrationDialogue(Uint8List.fromList(img.encodePng(faceImg2)), recognition);
     }
     drawRectangleAroundFaces();
   }
 
-    //TODO loại bỏ xoay ảnh từ camera
+  //TODO loại bỏ xoay ảnh từ camera
   removeRotation(File inputImage) async {
-    final img.Image? capturedImage = img.decodeImage(await File(inputImage!.path).readAsBytes());
+    final img.Image? capturedImage =
+        img.decodeImage(await File(inputImage.path).readAsBytes());
     final img.Image orientedImage = img.bakeOrientation(capturedImage!);
     return await File(_image!.path).writeAsBytes(img.encodeJpg(orientedImage));
   }
@@ -114,60 +124,63 @@ class _RecognitionScreenState extends State<RecognitionScreen> {
   TextEditingController textEditingController = TextEditingController();
   showFaceRegistrationDialogue(Uint8List cropedFace, Recognition recognition) {
     showDialog(
-      context: context, 
-      builder: (ctx) => AlertDialog(
-        title: const Text('Đăng ký khuôn mặt', textAlign: TextAlign.center),
-        alignment: Alignment.center,
-        content: SizedBox(
-          height: 340,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 20),
-              Image.memory(
-                cropedFace, 
-                width: 200,
-                height: 200,
-              ),
-              SizedBox(
-                width: 200,
-                child: TextField(
-                  controller: textEditingController,
-                  decoration: const InputDecoration(
-                    fillColor: Colors.white,
-                    filled: true,
-                    hintText: 'Nhập tên'
-                  ),
+        context: context,
+        builder: (ctx) => AlertDialog(
+              title:
+                  const Text('Đăng ký khuôn mặt', textAlign: TextAlign.center),
+              alignment: Alignment.center,
+              content: SizedBox(
+                height: 340,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 20),
+                    Image.memory(
+                      cropedFace,
+                      width: 200,
+                      height: 200,
+                    ),
+                    SizedBox(
+                      width: 200,
+                      child: TextField(
+                        controller: textEditingController,
+                        decoration: const InputDecoration(
+                            fillColor: Colors.white,
+                            filled: true,
+                            hintText: 'Nhập tên'),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    ElevatedButton(
+                        onPressed: () {
+                          textEditingController.text = '';
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(const SnackBar(
+                            content: Text('Khuôn mặt đã được đăng ký'),
+                          ));
+                        },
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            minimumSize: const Size(200, 40)),
+                        child: const Text("Đăng ký")),
+                  ],
                 ),
               ),
-              const SizedBox(height: 10),
-              ElevatedButton(onPressed: (){
-                textEditingController.text = '';
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Khuôn mặt đã được đăng ký'),
-                ));
-              },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, minimumSize: const Size(200, 40)),
-                child: const Text("Đăng ký")
-              ),
-            ],
-          ),
-        ),
-        contentPadding: EdgeInsets.zero,
-      )
-    );
+              contentPadding: EdgeInsets.zero,
+            ));
   }
 
-   //TODO vẽ hình chữ nhật xung quanh các khuôn mặt
-   var image;
-    drawRectangleAroundFaces() async {
-      image = await _image?.readAsBytes();
-      image = await decodeImageFromList(image);
-      print("${image.width}   ${image.height}");
-      setState(() {
-        recognitions;
-        image;
-        faces;
+  //TODO vẽ hình chữ nhật xung quanh các khuôn mặt
+  var image;
+  drawRectangleAroundFaces() async {
+    image = await _image?.readAsBytes();
+    image = await decodeImageFromList(image);
+    print("${image.width}   ${image.height}");
+    setState(() {
+      recognitions;
+      image;
+      faces;
     });
   }
 
@@ -183,35 +196,34 @@ class _RecognitionScreenState extends State<RecognitionScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           image != null
-          ? 
-          // Container(
-          //  margin: const EdgeInsets.only(top: 100),
-          //  width: screenWidth - 50,
-          //  height: screenWidth - 50,
-          //  child: Image.file(_image!),
-          // )
-          Container(
-                  margin: const EdgeInsets.only(top: 60, left: 30, right: 30, bottom: 0),
+              ?
+              // Container(
+              //  margin: const EdgeInsets.only(top: 100),
+              //  width: screenWidth - 50,
+              //  height: screenWidth - 50,
+              //  child: Image.file(_image!),
+              // )
+              Container(
+                  margin: const EdgeInsets.only(
+                      top: 60, left: 30, right: 30, bottom: 0),
                   child: FittedBox(
                     child: SizedBox(
                       width: image.width.toDouble(),
                       height: image.width.toDouble(),
-                     child: CustomPaint(
+                      child: CustomPaint(
                         painter: FacePainter(
-                          facesList: recognitions, 
-                          imageFile: image
-                        ),
+                            facesList: recognitions, imageFile: image),
                       ),
                     ),
                   ))
-          : Container(
-            margin: const EdgeInsets.only(top: 100),
-              child: Image.asset(
-                "images/logo.png",
-                width: screenWidth - 100,
-                height: screenWidth - 100,
-              ),
-          ),
+              : Container(
+                  margin: const EdgeInsets.only(top: 100),
+                  child: Image.asset(
+                    "images/logo.png",
+                    width: screenWidth - 100,
+                    height: screenWidth - 100,
+                  ),
+                ),
           Container(
             height: 50,
           ),
@@ -233,11 +245,12 @@ class _RecognitionScreenState extends State<RecognitionScreen> {
                     child: SizedBox(
                       width: screenWidth / 2 - 70,
                       height: screenWidth / 2 - 70,
-                      child: Icon(Icons.image, color: Colors.blue, size: screenWidth / 7),
+                      child: Icon(Icons.image,
+                          color: Colors.blue, size: screenWidth / 7),
                     ),
                   ),
                 ),
-                   Card(
+                Card(
                   shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(200)),
                   ),
@@ -248,7 +261,8 @@ class _RecognitionScreenState extends State<RecognitionScreen> {
                     child: SizedBox(
                       width: screenWidth / 2 - 70,
                       height: screenWidth / 2 - 70,
-                      child: Icon(Icons.camera, color: Colors.blue, size: screenWidth / 7),
+                      child: Icon(Icons.camera,
+                          color: Colors.blue, size: screenWidth / 7),
                     ),
                   ),
                 ),
